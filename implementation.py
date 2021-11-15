@@ -1,3 +1,5 @@
+#Importing all relevant packages
+
 import numpy as np
 import random
 import cv2
@@ -22,6 +24,8 @@ from tensorflow.keras import backend as K
 from fl_mnist_implementation_tutorial_utils import *
 
 
+# Reading and Preprocessing MNIST data set
+
 def load(paths, verbose=-1):
     '''expects images for each class in seperate dir, 
     e.g all digits in 0 class in the directory named 0 '''
@@ -43,6 +47,8 @@ def load(paths, verbose=-1):
     return data, labels
 
 
+#Creating train-test split
+
 # declear path to your mnist data folder
 img_path = '/path/to/your/training/dataset'
 
@@ -62,6 +68,8 @@ X_train, X_test, y_train, y_test = train_test_split(image_list,
                                                     test_size=0.1,
                                                     random_state=42)
 
+
+#Federated members as Data Shards
 
 def create_clients(image_list, label_list, num_clients=10, initial='clients'):
     ''' return: a dictionary with keys clients' names and value as 
@@ -90,10 +98,11 @@ def create_clients(image_list, label_list, num_clients=10, initial='clients'):
 
     return {client_names[i]: shards[i] for i in range(len(client_names))}
 
-
 # create clients
 clients = create_clients(X_train, y_train, num_clients=10, initial='client')
 
+
+#Preprocessing and batching clients' and test data
 
 def batch_data(data_shard, bs=32):
     '''Takes in a clients data shard and create a tfds object off it
@@ -118,6 +127,8 @@ test_batched = tf.data.Dataset.from_tensor_slices(
     (X_test, y_test)).batch(len(y_test))
 
 
+#Creating the Multi Layer Perceptron (MLP) Model
+
 class SimpleMLP:
     @staticmethod
     def build(shape, classes):
@@ -140,6 +151,7 @@ optimizer = SGD(lr=lr,
                 momentum=0.9
                 )
 
+#Federated Averaging
 
 def weight_scalling_factor(clients_trn_data, client_name):
     client_names = list(clients_trn_data.keys())
@@ -184,6 +196,8 @@ def test_model(X_test, Y_test,  model, comm_round):
         comm_round, acc, loss))
     return acc, loss
 
+
+#Federated Model Training
 
 # initialize global model
 smlp_global = SimpleMLP()
